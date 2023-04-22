@@ -12,7 +12,6 @@ import {Server} from "socket.io";
 
 const PORT = process.env.PORT || 3001;
 export const __dirname = path.resolve();
-console.log(__dirname);
 
 const app = express();
 
@@ -31,11 +30,10 @@ const io = new Server(server, {
 let usersOnline = [];
 io.on("connection", (socket) => {
     console.log(`User connected on socket: ${socket.id}`);
-
     io.emit("newUserResponse", usersOnline);
 
     socket.on("disconnect", () => {
-        console.log("User disconnected ");
+        // console.log("User disconnected ");
         usersOnline = usersOnline.filter((el) => el.socketId !== socket.id);
         io.emit("newUserResponse", usersOnline);
     });
@@ -47,31 +45,34 @@ io.on("connection", (socket) => {
         const userSenderIndex = usersOnline.findIndex(
             (el) => el.socketId === data.userSenderId
         );
-
-        usersOnline[userReceiverIndex].status = data.status;
-        usersOnline[userSenderIndex].status = data.status;
-
+        if (userReceiverIndex !== -1) {
+            usersOnline[userReceiverIndex].status = data.status;
+        }
+        if (userSenderIndex !== -1) {
+            usersOnline[userSenderIndex].status = data.status;
+        }
         io.to(data.userReceiverId).emit("messageResponse", data);
-
         io.emit("newUserResponse", usersOnline);
     });
 
     socket.on("play", (data) => {
-        // const userReceiverIndex = usersOnline.findIndex(
-        //     (el) => el.socketId === data.userReceiverId
-        // );
-        // const userSenderIndex = usersOnline.findIndex(
-        //     (el) => el.socketId === data.userSenderId
-        // );
-
         io.to(data.userReceiverId).emit("playResponse", data);
-
     });
 
     socket.on("newUser", (data) => {
         usersOnline.push(data);
-        console.log(usersOnline);
+        // console.log(usersOnline);
         io.emit("newUserResponse", usersOnline);
+    });
+
+    socket.on("userFree", (data) => {
+        const userSenderIndex = usersOnline.findIndex(
+            (el) => el.socketId === data.userSenderId
+        );
+        if (userSenderIndex !== -1) {
+            usersOnline[userSenderIndex].status = data.status;
+            io.emit("newUserResponse", usersOnline);
+        }
     });
 
     // We can write our socket event listeners in here...
@@ -80,7 +81,6 @@ io.on("connection", (socket) => {
 app.use(express.static(path.resolve(__dirname, "img")));
 
 console.log(path.resolve(__dirname, "img"));
-// app.use(express.static(path.resolve(__dirname, "avatars/default")));
 // app.use(express.static(path.resolve(__dirname, "../frontend/build")));
 
 server.listen(PORT, () => {

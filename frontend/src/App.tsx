@@ -9,7 +9,7 @@ import {
     newUser,
     play,
     playResponse,
-    sendMessage,
+    sendMessage, userFree,
     usersOnlineResponse,
 } from "./socket.service";
 import {AddName} from "./components/AddName";
@@ -149,21 +149,21 @@ function App() {
             setGameOver(GameOver.WINTAC);
         }
     };
-    const disconnectHandle = () => {
-        const data: Message = {
-            status: UserStatus.WAITING,
-            userSenderId: me.socketId,
-            userReceiverId: player.socketId,
-        };
-        sendMessage(data);
-        disconnectSocket();
-        setMe(initialUser);
-        setPlayer(initialUser);
-        setYourTurn(false);
-        setPlaying(false);
-        setGameOver(GameOver.FALSE);
-        setYourToe(FieldData.TIC);
-    };
+    // const disconnectHandle = () => {
+    //     const data: Message = {
+    //         status: UserStatus.WAITING,
+    //         userSenderId: me.socketId,
+    //         userReceiverId: player.socketId,
+    //     };
+    //     sendMessage(data);
+    //     disconnectSocket();
+    //     setMe(initialUser);
+    //     setPlayer(initialUser);
+    //     setYourTurn(false);
+    //     setPlaying(false);
+    //     setGameOver(GameOver.FALSE);
+    //     setYourToe(FieldData.TIC);
+    // };
     const newGameClick = () => {
         const data: Message = {
             status: UserStatus.WAITING,
@@ -250,6 +250,17 @@ function App() {
             setYourToe(FieldData.TIC);
         }
     }, [usersOnline]);
+
+    useEffect(() => {
+        if (!isPlaying) {
+            const data: Message = {
+                status: UserStatus.WAITING,
+                userSenderId: me.socketId,
+                userReceiverId: player.socketId,
+            };
+            userFree(data);
+        }
+    }, [isPlaying])
 
     return (
         <div className="container mx-auto flex flex-col items-center pl-4 pr-4 pt-6 pb-6 max-w-md min-w-[360px]">

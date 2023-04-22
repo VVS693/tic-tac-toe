@@ -11,6 +11,7 @@ type ClientToServerEvents = {
     newUser: (data: UsersOnline) => void;
     message: (data: Message) => void;
     play: (data: PlayTurn) => void;
+    userFree: (data: Message) => void;
 }
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -24,7 +25,7 @@ export const initiateSocketConnection = () => {
     });
 };
 export const disconnectSocket = () => {
-    // console.log("Disconnecting socket...");
+    console.log("Disconnecting socket...");
     if (socket) socket.disconnect();
 };
 export const messageResponse = (cb: any) => {
@@ -64,4 +65,8 @@ export const newUser = (userName: string, cb: any) => {
     };
     if (socket) socket.emit("newUser", data);
     return cb(socket.id)
+};
+
+export const userFree = (data: Message) => {
+    if (socket) socket.emit("userFree", data);
 };
