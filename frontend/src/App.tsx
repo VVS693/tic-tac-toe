@@ -9,7 +9,7 @@ import {
     newUser,
     play,
     playResponse,
-    sendMessage, userFree,
+    sendMessage, userFree, userFreeResponse,
     usersOnlineResponse,
 } from "./socket.service";
 import {AddName} from "./components/AddName";
@@ -35,11 +35,13 @@ function App() {
         socketId: "",
         status: UserStatus.WAITING,
     };
+
     const [isDialogAddNameOpen, setDialogAddNameOpen] = useState(false);
     const [isUsersOnlineListOpen, setUsersOnlineListOpen] = useState(false);
     const [isUserInviteOpen, setUserInviteOpen] = useState(false);
     const [me, setMe] = useState<UsersOnline>(initialUser);
     const [player, setPlayer] = useState<UsersOnline>(initialUser);
+    const [invitedPlayer, setInvitedPlayer] = useState<UsersOnline>(initialUser);
     const [usersOnline, setUsersOnline] = useState<UsersOnline[]>([]);
     const [isPlaying, setPlaying] = useState(false);
     const [isYourTurn, setYourTurn] = useState(false);
@@ -47,7 +49,6 @@ function App() {
     const [gameOver, setGameOver] = useState<GameOver>(GameOver.FALSE);
 
     const {dataField, setDataField, initialData} = useNewGame();
-
     const checkEndGame = (field: FieldData[][]) => {
         if (field.flat(Infinity).every((el) => el !== FieldData.NULL)) {
             setGameOver(GameOver.NOBODY);
@@ -106,6 +107,12 @@ function App() {
             userReceiverId: el.socketId,
         };
         sendMessage(data);
+        const invitedPlayerData: UsersOnline = {
+            status: el.status,
+            userName: el.userName,
+            socketId: el.socketId
+        }
+        setInvitedPlayer(invitedPlayerData)
     };
     const disagreeHandle = (user: UsersOnline) => {
         const data: Message = {
@@ -116,6 +123,7 @@ function App() {
         sendMessage(data);
         setUserInviteOpen(false);
         setUsersOnlineListOpen(true);
+        setInvitedPlayer(initialUser)
     };
     const agreeHandle = (user: UsersOnline) => {
         const data: Message = {
@@ -149,21 +157,6 @@ function App() {
             setGameOver(GameOver.WINTAC);
         }
     };
-    // const disconnectHandle = () => {
-    //     const data: Message = {
-    //         status: UserStatus.WAITING,
-    //         userSenderId: me.socketId,
-    //         userReceiverId: player.socketId,
-    //     };
-    //     sendMessage(data);
-    //     disconnectSocket();
-    //     setMe(initialUser);
-    //     setPlayer(initialUser);
-    //     setYourTurn(false);
-    //     setPlaying(false);
-    //     setGameOver(GameOver.FALSE);
-    //     setYourToe(FieldData.TIC);
-    // };
     const newGameClick = () => {
         const data: Message = {
             status: UserStatus.WAITING,
@@ -190,6 +183,9 @@ function App() {
         usersOnlineResponse((data: UsersOnline[]) => {
             setUsersOnline(data);
         });
+        return () => {
+            disconnectSocket();
+        };
     }, [])
 
     useEffect(() => {
@@ -237,30 +233,24 @@ function App() {
     }, [usersOnline])
 
     useEffect(() => {
-        if (
-            !usersOnline.find((el) => el.socketId === player.socketId) &&
-            me.userName !== ""
-        ) {
-            setPlayer(initialUser);
-            setYourTurn(false);
-            setPlaying(false);
-            setUsersOnlineListOpen(true);
-            setDataField(initialData);
-            setGameOver(GameOver.FALSE);
-            setYourToe(FieldData.TIC);
-        }
-    }, [usersOnline]);
-
-    useEffect(() => {
-        if (!isPlaying) {
-            const data: Message = {
-                status: UserStatus.WAITING,
-                userSenderId: me.socketId,
-                userReceiverId: player.socketId,
-            };
-            userFree(data);
-        }
-    }, [isPlaying])
+        userFreeResponse((socketId: string) => {
+            if (me.userName !== "" && (socketId === invitedPlayer.socketId || socketId === player.socketId)) {
+                const data: Message = {
+                    status: UserStatus.WAITING,
+                    userSenderId: me.socketId,
+                    userReceiverId: player.socketId,
+                };
+                userFree(data);
+                setPlayer(initialUser);
+                setYourTurn(false);
+                setPlaying(false);
+                setUsersOnlineListOpen(true);
+                setDataField(initialData);
+                setGameOver(GameOver.FALSE);
+                setYourToe(FieldData.TIC);
+            }
+        });
+    }, [usersOnline])
 
     return (
         <div className="container mx-auto flex flex-col items-center pl-4 pr-4 pt-6 pb-6 max-w-md min-w-[360px]">

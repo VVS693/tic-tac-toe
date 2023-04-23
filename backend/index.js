@@ -36,6 +36,7 @@ io.on("connection", (socket) => {
         // console.log("User disconnected ");
         usersOnline = usersOnline.filter((el) => el.socketId !== socket.id);
         io.emit("newUserResponse", usersOnline);
+        io.emit("userFreeResponse", socket.id);
     });
 
     socket.on("message", (data) => {

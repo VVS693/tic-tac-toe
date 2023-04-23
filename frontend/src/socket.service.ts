@@ -5,6 +5,7 @@ type ServerToClientEvents = {
     messageResponse: (callback: (data: Message) => void) => void;
     newUserResponse: (data: UsersOnline) => void;
     playResponse: (data: PlayTurn) => void;
+    userFreeResponse: (data: string) => void
 }
 
 type ClientToServerEvents = {
@@ -69,4 +70,12 @@ export const newUser = (userName: string, cb: any) => {
 
 export const userFree = (data: Message) => {
     if (socket) socket.emit("userFree", data);
+};
+
+export const userFreeResponse = (cb: any) => {
+    if (!socket) return true;
+    socket.on("userFreeResponse", (data) => {
+        // console.log("Play turn received!");
+        return cb(data);
+    });
 };
