@@ -7,13 +7,7 @@ export type FieldSquareProps = {
     isYourTurn: boolean;
     isGameOver: GameOver
 };
-
-export function FieldSquare({
-                                figure,
-                                onClick,
-                                isYourTurn = true,
-                                isGameOver
-                            }: FieldSquareProps) {
+export function FieldSquare({figure, onClick, isYourTurn = true, isGameOver}: FieldSquareProps) {
     const winBgColor = "#f9a8d4";
     return (
         <Button

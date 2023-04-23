@@ -17,9 +17,9 @@ type ClientToServerEvents = {
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents>;
 export const initiateSocketConnection = () => {
-    socket = io("http://localhost:3001");
+    // socket = io("http://localhost:3001");
 
-    // socket = io("https://sl.vvs693.ru");
+    socket = io("https://tictactoe.vvs693.ru");
 
     // console.log(`Connecting socket...`);
     socket.on("connect", () => {
@@ -67,11 +67,9 @@ export const newUser = (userName: string, cb: any) => {
     if (socket) socket.emit("newUser", data);
     return cb(socket.id)
 };
-
 export const userFree = (data: Message) => {
     if (socket) socket.emit("userFree", data);
 };
-
 export const userFreeResponse = (cb: any) => {
     if (!socket) return true;
     socket.on("userFreeResponse", (data) => {
